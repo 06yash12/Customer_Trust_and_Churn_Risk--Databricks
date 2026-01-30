@@ -160,4 +160,4 @@ The pipeline processed **64,374** customer records, yielding the following segme
 
 ## Acknowledgments
 
-This project was developed as part of the **Databricks 14-day challenge**, followed by **7 days of Build With Databricks: Hands-On Project Challenge**, with **700+ Participants**. I sincerely appreciate the initiative, guidance, and learning opportunity provided by **[Databricks](https://databricks.com/)**, **[Codebasics](https://codebasics.io/)**, and the **[Indian Data Club](https://www.linkedin.com/company/indian-data-club/)**, for support.
+This project was developed as part of the **Databricks 14-days challenge**, followed by **7 days of Build With Databricks: Hands-On Project Challenge**, with **700+ Participants**. I sincerely appreciate the initiative, guidance, and learning opportunity provided by **[Databricks](https://databricks.com/)**, **[Codebasics](https://codebasics.io/)**, and the **[Indian Data Club](https://www.linkedin.com/company/indian-data-club/)**, for support.
