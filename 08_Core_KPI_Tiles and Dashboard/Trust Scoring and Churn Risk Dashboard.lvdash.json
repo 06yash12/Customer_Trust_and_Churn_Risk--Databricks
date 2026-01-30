@@ -1,0 +1,1165 @@
+{
+  "datasets": [
+    {
+      "name": "018239cd",
+      "displayName": "Total Customers",
+      "queryLines": [
+        "SELECT COUNT(*) AS total_customers\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final;"
+      ]
+    },
+    {
+      "name": "8cab485d",
+      "displayName": "High-Risk Customers",
+      "queryLines": [
+        "SELECT COUNT(*) AS high_risk_customers\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final\r\n",
+        "WHERE final_decision = 'HIGH_RISK';"
+      ]
+    },
+    {
+      "name": "325ef0e3",
+      "displayName": "High-Risk Percentage",
+      "queryLines": [
+        "SELECT \r\n",
+        "  ROUND(\r\n",
+        "    100.0 * SUM(CASE WHEN final_decision = 'HIGH_RISK' THEN 1 ELSE 0 END) / COUNT(*),\r\n",
+        "    2\r\n",
+        "  ) AS high_risk_percentage\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final;"
+      ]
+    },
+    {
+      "name": "eae0cff1",
+      "displayName": "Risk Classification Split",
+      "queryLines": [
+        "SELECT final_decision, COUNT(*) AS customers\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final\r\n",
+        "GROUP BY final_decision;"
+      ]
+    },
+    {
+      "name": "951e3168",
+      "displayName": "Confidence Distribution",
+      "queryLines": [
+        "SELECT\r\n",
+        "  CASE\r\n",
+        "    WHEN prediction_confidence >= 0.9 THEN '0.9 – 1.0'\r\n",
+        "    WHEN prediction_confidence >= 0.7 THEN '0.7 – 0.9'\r\n",
+        "    WHEN prediction_confidence >= 0.5 THEN '0.5 – 0.7'\r\n",
+        "    ELSE '< 0.5'\r\n",
+        "  END AS confidence_bucket,\r\n",
+        "  COUNT(*) AS customers\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final\r\n",
+        "GROUP BY confidence_bucket\r\n",
+        "ORDER BY confidence_bucket DESC;"
+      ]
+    },
+    {
+      "name": "7097739b",
+      "displayName": "Risk by Subscription Type",
+      "queryLines": [
+        "SELECT \r\n",
+        "  c.subscription_type,\r\n",
+        "  ROUND(AVG(p.prediction_confidence), 3) AS avg_risk\r\n",
+        "FROM ai_trust_catalog.churn_trust.silver_customer_churn c\r\n",
+        "JOIN ai_trust_score_project.trust_predictions_final p\r\n",
+        "ON c.customerid = p.customerid\r\n",
+        "GROUP BY c.subscription_type\r\n",
+        "ORDER BY avg_risk DESC;"
+      ]
+    },
+    {
+      "name": "034a9b32",
+      "displayName": "Risk by Age Group",
+      "queryLines": [
+        "SELECT\r\n",
+        "  CASE\r\n",
+        "    WHEN age < 25 THEN 'Under 25'\r\n",
+        "    WHEN age BETWEEN 25 AND 40 THEN '25–40'\r\n",
+        "    WHEN age BETWEEN 41 AND 60 THEN '41–60'\r\n",
+        "    ELSE '60+'\r\n",
+        "  END AS age_group,\r\n",
+        "  ROUND(AVG(p.prediction_confidence), 3) AS avg_risk\r\n",
+        "FROM ai_trust_catalog.churn_trust.silver_customer_churn c\r\n",
+        "JOIN ai_trust_score_project.trust_predictions_final p\r\n",
+        "ON c.customerid = p.customerid\r\n",
+        "GROUP BY age_group\r\n",
+        "ORDER BY avg_risk DESC;\r\n"
+      ]
+    },
+    {
+      "name": "44ef307d",
+      "displayName": "Risk vs Support Calls",
+      "queryLines": [
+        "SELECT\r\n",
+        "  support_calls,\r\n",
+        "  ROUND(AVG(p.prediction_confidence), 3) AS avg_risk\r\n",
+        "FROM ai_trust_catalog.churn_trust.silver_customer_churn c\r\n",
+        "JOIN ai_trust_score_project.trust_predictions_final p\r\n",
+        "ON c.customerid = p.customerid\r\n",
+        "GROUP BY support_calls\r\n",
+        "ORDER BY support_calls;\r\n"
+      ]
+    },
+    {
+      "name": "822dc16d",
+      "displayName": "Risk vs Payment Delay",
+      "queryLines": [
+        "SELECT\r\n",
+        "  payment_delay,\r\n",
+        "  ROUND(AVG(p.prediction_confidence), 3) AS avg_risk\r\n",
+        "FROM ai_trust_catalog.churn_trust.silver_customer_churn c\r\n",
+        "JOIN ai_trust_score_project.trust_predictions_final p\r\n",
+        "ON c.customerid = p.customerid\r\n",
+        "GROUP BY payment_delay\r\n",
+        "ORDER BY payment_delay;"
+      ]
+    },
+    {
+      "name": "4418b20c",
+      "displayName": "Top 20 High-Risk Customers",
+      "queryLines": [
+        "SELECT\r\n",
+        "  c.customerid,\r\n",
+        "  c.subscription_type,\r\n",
+        "  c.total_spend,\r\n",
+        "  p.prediction_confidence\r\n",
+        "FROM ai_trust_catalog.churn_trust.silver_customer_churn c\r\n",
+        "JOIN ai_trust_score_project.trust_predictions_final p\r\n",
+        "ON c.customerid = p.customerid\r\n",
+        "WHERE p.final_decision = 'HIGH_RISK'\r\n",
+        "ORDER BY p.prediction_confidence DESC\r\n",
+        "LIMIT 20;\r\n"
+      ]
+    },
+    {
+      "name": "8723c99a",
+      "displayName": "Average Confidence",
+      "queryLines": [
+        "SELECT ROUND(AVG(prediction_confidence), 3) AS avg_confidence\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final;\r\n"
+      ]
+    },
+    {
+      "name": "c35bdb4a",
+      "displayName": "Confidence Stability",
+      "queryLines": [
+        "SELECT ROUND(STDDEV(prediction_confidence), 3) AS confidence_std_dev\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final;\r\n"
+      ]
+    },
+    {
+      "name": "8d81e138",
+      "displayName": "HIGH-RISK Customers Card",
+      "queryLines": [
+        "SELECT \r\n",
+        "  COUNT(*) AS high_risk_customers\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final\r\n",
+        "WHERE final_decision = 'HIGH_RISK';\r\n"
+      ]
+    },
+    {
+      "name": "a2868bb2",
+      "displayName": "LOW-RISK Customers Card",
+      "queryLines": [
+        "SELECT \r\n",
+        "  COUNT(*) AS low_risk_customers\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final\r\n",
+        "WHERE final_decision = 'LOW_RISK';\r\n"
+      ]
+    },
+    {
+      "name": "1743efdd",
+      "displayName": "Customer Counts by Prediction Confidence Range",
+      "queryLines": [
+        "SELECT\r\n",
+        "  CASE\r\n",
+        "    WHEN prediction_confidence < 0.2 THEN '< 0.2'\r\n",
+        "    WHEN prediction_confidence < 0.3 THEN '0.2 – 0.3'\r\n",
+        "    WHEN prediction_confidence < 0.4 THEN '0.3 – 0.4'\r\n",
+        "    WHEN prediction_confidence < 0.5 THEN '0.4 – 0.5'\r\n",
+        "    WHEN prediction_confidence < 0.6 THEN '0.5 – 0.6'\r\n",
+        "    WHEN prediction_confidence < 0.7 THEN '0.6 – 0.7'\r\n",
+        "    WHEN prediction_confidence < 0.8 THEN '0.7 – 0.8'\r\n",
+        "    WHEN prediction_confidence < 0.9 THEN '0.8 – 0.9'\r\n",
+        "    ELSE '0.9 – 1.0'\r\n",
+        "  END AS confidence_bucket,\r\n",
+        "  COUNT(*) AS customers\r\n",
+        "FROM ai_trust_score_project.trust_predictions_final\r\n",
+        "GROUP BY confidence_bucket\r\n",
+        "ORDER BY\r\n",
+        "  CASE confidence_bucket\r\n",
+        "    WHEN '< 0.2' THEN 1\r\n",
+        "    WHEN '0.2 – 0.3' THEN 2\r\n",
+        "    WHEN '0.3 – 0.4' THEN 3\r\n",
+        "    WHEN '0.4 – 0.5' THEN 4\r\n",
+        "    WHEN '0.5 – 0.6' THEN 5\r\n",
+        "    WHEN '0.6 – 0.7' THEN 6\r\n",
+        "    WHEN '0.7 – 0.8' THEN 7\r\n",
+        "    WHEN '0.8 – 0.9' THEN 8\r\n",
+        "    ELSE 9\r\n",
+        "  END;\r\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "388174b6",
+      "displayName": "KPI Cards",
+      "layout": [
+        {
+          "widget": {
+            "name": "total-customers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "018239cd",
+                  "fields": [
+                    {
+                      "name": "sum(total_customers)",
+                      "expression": "SUM(`total_customers`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_customers)"
+                }
+              },
+              "frame": {
+                "title": "Total Customers",
+                "showTitle": true
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#000C16"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "total-high-risk-customers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c35bdb4a",
+                  "fields": [
+                    {
+                      "name": "sum(confidence_std_dev)",
+                      "expression": "SUM(`confidence_std_dev`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(confidence_std_dev)"
+                }
+              },
+              "frame": {
+                "title": "Total High-Risk Customers",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "risk-classification-final-decision",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "eae0cff1",
+                  "fields": [
+                    {
+                      "name": "sum(customers)",
+                      "expression": "SUM(`customers`)"
+                    },
+                    {
+                      "name": "final_decision",
+                      "expression": "`final_decision`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(customers)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "final_decision",
+                  "legend": {
+                    "hideTitle": false,
+                    "position": "bottom"
+                  },
+                  "displayName": "Risk Zone",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "LOW_RISK",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      },
+                      {
+                        "value": "HIGH_RISK",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ],
+                    "sort": {
+                      "by": "natural-order-reversed"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "headerAlignment": "center",
+                "title": "Risk Classification",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "high-risk-percentage",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "325ef0e3",
+                  "fields": [
+                    {
+                      "name": "percentile(high_risk_percentage, percentage=1)",
+                      "expression": "PERCENTILE(`high_risk_percentage`, 1)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "percentile(high_risk_percentage, percentage=1)",
+                  "style": {
+                    "rules": [
+                      {
+                        "condition": {
+                          "operator": ">="
+                        },
+                        "color": "#00A972"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "headerAlignment": "center",
+                "title": "High Risk Percentage",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "total-support-calls",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7097739b",
+                  "fields": [
+                    {
+                      "name": "avg_risk",
+                      "expression": "`avg_risk`"
+                    },
+                    {
+                      "name": "subscription_type",
+                      "expression": "`subscription_type`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "avg_risk",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Average Risk"
+                },
+                "color": {
+                  "fieldName": "subscription_type",
+                  "displayName": "Subscription Type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "title": "Risk by Subscription Type",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 4,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "average-risk-by-age-group",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "034a9b32",
+                  "fields": [
+                    {
+                      "name": "age_group",
+                      "expression": "`age_group`"
+                    },
+                    {
+                      "name": "avg(avg_risk)",
+                      "expression": "AVG(`avg_risk`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "age_group",
+                  "axis": {
+                    "title": "Customer Age Group"
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(avg_risk)",
+                  "axis": {
+                    "title": "Average Churn Risk",
+                    "hideGrid": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "age_group",
+                  "legend": {
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Average Risk by Age Group",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 4,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "support-calls-counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "44ef307d",
+                  "fields": [
+                    {
+                      "name": "support_calls",
+                      "expression": "`support_calls`"
+                    },
+                    {
+                      "name": "avg_risk",
+                      "expression": "`avg_risk`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "support_calls",
+                  "displayName": "Support Calls",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg_risk",
+                  "displayName": "Avg Risk",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Risk vs Support Calls ",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 16,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "payment-delay-vs-average-risk",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "822dc16d",
+                  "fields": [
+                    {
+                      "name": "payment_delay",
+                      "expression": "`payment_delay`"
+                    },
+                    {
+                      "name": "avg_risk",
+                      "expression": "`avg_risk`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "combo",
+              "encodings": {
+                "x": {
+                  "fieldName": "payment_delay",
+                  "axis": {
+                    "labelAngle": 0,
+                    "hideLabels": false,
+                    "hideTitle": false
+                  },
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    },
+                    "hideGroupSeparator": false
+                  },
+                  "displayName": "Payment Delay",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "color": {
+                  "legend": {
+                    "hide": true
+                  }
+                },
+                "y": {
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "avg_risk",
+                        "displayName": "Avg Risk"
+                      }
+                    ]
+                  },
+                  "secondary": {
+                    "fields": []
+                  },
+                  "scale": {
+                    "type": "quantitative",
+                    "fn": {
+                      "type": "symlog"
+                    }
+                  },
+                  "axis": {
+                    "hideTitle": false,
+                    "hideLabels": false,
+                    "hideGrid": true
+                  }
+                }
+              },
+              "frame": {
+                "title": "Payment Delay vs Average Risk",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "top-20-high-risk-customers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4418b20c",
+                  "fields": [
+                    {
+                      "name": "customerid",
+                      "expression": "`customerid`"
+                    },
+                    {
+                      "name": "subscription_type",
+                      "expression": "`subscription_type`"
+                    },
+                    {
+                      "name": "total_spend",
+                      "expression": "`total_spend`"
+                    },
+                    {
+                      "name": "prediction_confidence",
+                      "expression": "`prediction_confidence`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "customerid",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "customerid",
+                    "allowSearch": true,
+                    "alignContent": "center",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "subscription_type",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "subscription_type",
+                    "allowSearch": false,
+                    "alignContent": "center",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "total_spend",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "total_spend",
+                    "allowSearch": false,
+                    "alignContent": "center",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "prediction_confidence",
+                    "numberFormat": "0.000000",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "prediction_confidence",
+                    "allowSearch": false,
+                    "alignContent": "center",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false,
+              "frame": {
+                "title": "Top 20 High-Risk Customers",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "average-prediction-confidence",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8723c99a",
+                  "fields": [
+                    {
+                      "name": "avg(avg_confidence)",
+                      "expression": "AVG(`avg_confidence`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(avg_confidence)"
+                }
+              },
+              "frame": {
+                "title": "Avg Prediction Confidence",
+                "showTitle": true,
+                "showDescription": false,
+                "description": "Higher values indicate more decisive and reliable model predictions across the customer base."
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "b3683c1e",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# <span style=\"text-align:center;display:block\"><span style=\"font-family:Times New Roman;font-size:48px;line-height:1.5\">**Customer Trust and Churn Risk Dashboard**</span></span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "3117402e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8d81e138",
+                  "fields": [
+                    {
+                      "name": "sum(high_risk_customers)",
+                      "expression": "SUM(`high_risk_customers`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(high_risk_customers)"
+                }
+              },
+              "frame": {
+                "title": "HIGH-RISK Customers ",
+                "showTitle": true,
+                "showDescription": false,
+                "description": "Higher values indicate more decisive and reliable model predictions across the customer base."
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ff75370f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a2868bb2",
+                  "fields": [
+                    {
+                      "name": "avg(low_risk_customers)",
+                      "expression": "AVG(`low_risk_customers`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(low_risk_customers)"
+                }
+              },
+              "frame": {
+                "showDescription": false,
+                "description": "Higher values indicate more decisive and reliable model predictions across the customer base.",
+                "title": "LOW-RISK Customers ",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "customer-counts-by-prediction-confidence",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1743efdd",
+                  "fields": [
+                    {
+                      "name": "confidence_bucket",
+                      "expression": "`confidence_bucket`"
+                    },
+                    {
+                      "name": "sum(customers)",
+                      "expression": "SUM(`customers`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`confidence_bucket` IN (`confidence_bucket`) OR TRUE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "confidence_bucket",
+                  "axis": {
+                    "hideLabels": false,
+                    "hideTitle": false,
+                    "labelAngle": 0
+                  },
+                  "displayName": "Confidence Bucket",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "natural-order"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(customers)",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": false
+                  },
+                  "displayName": "Customers",
+                  "scale": {
+                    "type": "quantitative",
+                    "reverse": false
+                  }
+                },
+                "color": {
+                  "fieldName": "confidence_bucket",
+                  "legend": {
+                    "hideTitle": true,
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "title": "Customer Counts by Prediction Confidence Range",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 10,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FAFAFB",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "visualizationColors": [
+        "#077A9D",
+        "#FFAB00",
+        "#00A972",
+        "#FF3621",
+        "#8BCAE7",
+        "#AB4057",
+        "#99DDB4",
+        "#FCA4A1",
+        "#919191",
+        "#BF7080"
+      ],
+      "widgetHeaderAlignment": "CENTER"
+    },
+    "applyModeEnabled": false
+  }
+}
